@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>卖火柴的小姑娘 - 互动故事</title>
+  <style>
+    /* 全局样式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Microsoft YaHei', serif;
+    }
+
+    body {
+      background-color: #000;
+      overflow: hidden;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* 场景显示区 */
+    #scene-display {
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    /* 控制面板 */
+    #controls {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+
+    .control-btn {
+      background-color: rgba(255, 255, 255, 0.8);
+      border: none;
+      padding: 10px 15px;
+      margin-left: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .control-btn:hover {
+      background-color: rgba(255, 255, 255, 1);
+      transform: scale(1.05);
+    }
+
+    /* 对话框 */
+    #dialog-box {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+      z-index: 5;
+    }
+
+    #dialog-text {
+      font-size: 20px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    /* 选项 */
+    #options {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+
+    .option {
+      background-color: rgba(255, 255, 255, 0.7);
+      color: black;
+      border: none;
+      padding: 15px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      margin: 10px;
+      flex: 1;
+      min-width: 250px;
+      transition: all 0.3s ease;
+      display: none; /* 初始隐藏，文本显示完后再显示 */
+    }
+
+    .option:hover {
+      background-color: rgba(255, 255, 255, 1);
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    }
+
+    /* 开始界面 */
+    #start-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      z-index: 100;
+    }
+
+    #start-screen h1 {
+      font-size: 50px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    #start-screen p {
+      font-size: 24px;
+      margin-bottom: 40px;
+      text-align: center;
+      width: 60%;
+    }
+
+    #start-btn {
+      background-color: rgba(255, 255, 255, 0.7);
+      color: black;
+      border: none;
+      padding: 20px 30px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 24px;
+      transition: all 0.3s ease;
+    }
+
+    #start-btn:hover {
+      background-color: rgba(255, 255, 255, 1);
+      transform: scale(1.05);
+    }
+
+    /* 复盘界面 */
+    #review-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.95);
+      color: white;
+      padding: 50px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+    }
+
+    #review-screen h2 {
+      font-size: 40px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    #review-screen h3 {
+      font-size: 30px;
+      margin: 30px 0 15px 0;
+    }
+
+    #review-screen p {
+      font-size: 20px;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    #review-screen ul {
+      font-size: 20px;
+      line-height: 1.6;
+      margin-left: 30px;
+    }
+
+    #restart-btn {
+      background-color: rgba(255, 255, 255, 0.7);
+      color: black;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 20px;
+      margin: 30px auto;
+      display: block;
+      transition: all 0.3s ease;
+    }
+
+    #restart-btn:hover {
+      background-color: rgba(255, 255, 255, 1);
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <!-- 开始界面 -->
+    <div id="start-screen">
+      <h1>卖火柴的小姑娘</h1>
+      <p>在一个寒冷的圣诞夜，你成为了那个卖火柴的小女孩，穿梭在冰冷的街头。你的命运将由你的选择决定...</p>
+      <button id="start-btn">开始体验</button>
+    </div>
+
+    <!-- 场景显示区 -->
+    <div id="scene-display"></div>
+
+    <!-- 控制面板 -->
+    <div id="controls">
+      <button class="control-btn" onclick="previousScene()">上一步</button>
+      <button class="control-btn" onclick="restartGame()">重新开始</button>
+    </div>
+
+    <!-- 对话框 -->
+    <div id="dialog-box">
+      <div id="dialog-text"></div>
+      <div id="options"></div>
+    </div>
+
+    <!-- 复盘界面 -->
+    <div id="review-screen">
+      <h2>游戏复盘</h2>
+      <h3>你的选择路径</h3>
+      <div id="choice-history"></div>
+
+      <h3>重点解析</h3>
+      <p>在这个故事中，小女孩通过擦燃火柴看到的幻象（火炉、烤鹅、圣诞树、奶奶），反映了她内心深处的渴望：温暖、食物、快乐和亲情。这些幻象与她现实中的寒冷、饥饿、孤独形成了强烈的对比，深刻地揭示了社会的不公和人性的冷漠。</p>
+
+      <h3>课堂讨论题</h3>
+      <ul>
+        <li>小女孩为什么宁愿在幻象中跟随奶奶离开，也不愿继续忍受现实的痛苦？</li>
+        <li>这个故事揭示了当时社会的哪些问题？你对今天的社会有什么思考？</li>
+        <li>如果你是故事中的路人，你会怎么做？为什么？</li>
+      </ul>
+
+      <button id="restart-btn">重新开始游戏</button>
+    </div>
+  </div>
+
+  <script>
+    // 游戏状态
+    let currentScene = 0;
+    let choiceHistory = [];
+    let isTyping = false;
+
+    // 场景数据
+    const scenes = [
+      {
+        image: "pic/seedream_20251115_155134.png",
+        text: "在一个寒冷的圣诞夜，鹅毛般的雪花飘落下来，覆盖了整个城市。你穿着破旧的围裙，怀里紧紧抱着一盒火柴，赤着脚站在冰冷的街头。街上的人们都裹着厚厚的棉袄，急匆匆地往家里赶，准备和家人一起欢度圣诞夜。没有人注意到你，也没有人愿意买你的火柴。你已经一天没有吃东西了，寒冷和饥饿让你感到浑身无力。",
+        options: [
+          {text: "继续在街头叫卖", nextScene: 1},
+          {text: "找个墙角躲避风雪", nextScene: 1},
+          {text: "擦燃一根火柴取暖", nextScene: 2}
+        ]
+      },
+      {
+        image: "pic/seedream_20251115_155247.png",
+        text: "你站在冰冷的街角，雪花落在你的卷发和破旧衣服上，冻得红紫的小手捧着打开的火柴盒，向过往行人轻声叫卖。行人匆匆而过，有的看都不看你一眼，有的甚至露出嫌恶的表情。一个贵妇人牵着一条哈巴狗经过，小狗对着你叫了几声，贵妇人赶紧把小狗拉走，仿佛你会弄脏她们的衣服。你感到越来越冷，肚子也饿得咕咕直叫。",
+        options: [
+          {text: "继续叫卖", nextScene: 1},
+          {text: "躲到墙角避风", nextScene: 1},
+          {text: "擦燃一根火柴", nextScene: 2}
+        ]
+      },
+      {
+        image: "pic/seedream_20251115_155311.png",
+        text: "你蜷缩在墙角，擦燃了第一根火柴。橙红色的火光映红了你的小脸，你仿佛看到了一个温暖的铸铁火炉，炉火烧得正旺，散发出诱人的热量。你伸出冻得僵硬的手，想要靠近火炉，感受一下温暖。突然，火柴熄灭了，火炉也随之消失，你又回到了寒冷的现实中。",
+        options: [
+          {text: "再擦一根火柴", nextScene: 3},
+          {text: "继续蜷缩取暖", nextScene: 2},
+          {text: "熄灭火柴", nextScene: 1}
+        ]
+      },
+      {
+        image: "pic/seedream_20251115_155327.png",
+        text: "你擦燃了第二根火柴。火光中，你看到了一张摆满美食的餐桌，桌子上有香气扑鼻的烤鹅，还有面包、苹果和各种甜点。烤鹅的肚子里塞满了葡萄干和梅子，它似乎正向你走来，翅膀上还插着刀叉。你感到口水直流，想要伸手去拿，可就在这时，火柴熄灭了，餐桌和烤鹅都消失了。",
+        options: [
+          {text: "再擦一根火柴", nextScene: 4},
+          {text: "伸手去拿美食", nextScene: 3},
+          {text: "熄灭火柴", nextScene: 1}
+        ]
+      },
+      {
+        image: "pic/seedream_20251115_155346.png",
+        text: "你擦燃了第三根火柴。火光中，你看到了一棵装饰着金色星星和彩球的高大圣诞树，圣诞树比你家的屋顶还要高，树上挂满了各种精美的礼物。圣诞树发出柔和的光芒，让你感到温暖和幸福。你想要触摸一下圣诞树，可火柴又熄灭了，只剩下天上闪烁的星星。",
+        options: [
+          {text: "再擦一根火柴", nextScene: 5},
+          {text: "想要触摸圣诞树", nextScene: 4},
+          {text: "熄灭火柴", nextScene: 1}
+        ]
+      },
+      {
+        image: "pic/seedream_20251115_155404.png",
+        text: "你擦燃了第四根火柴。火光中，你看到了你的奶奶，她穿着白色的衣服，头发上戴着金色的花环，微笑着向你伸出手。奶奶是你唯一的亲人，她温柔地看着你，眼神中充满了爱。你感到无比亲切和温暖，这是你很久以来没有感受到的。",
+        options: [
+          {text: "擦燃所有火柴留住奶奶", nextScene: 6},
+          {text: "和奶奶说话", nextScene: 5},
+          {text: "熄灭火柴", nextScene: 1}
+        ]
+      },
+      {
+        image: "pic/seedream_20251115_155424.png",
+        text: "你害怕奶奶消失，急忙擦燃了所有火柴。奶奶温柔地抱着你，两人周围环绕着金色的光芒，慢慢地飞向深蓝色的夜空。你感到不再寒冷和饥饿，心中充满了幸福。你知道，你将和奶奶一起去一个没有寒冷、没有饥饿的地方，那里充满了爱和温暖。",
+        options: [
+          {text: "跟随奶奶飞向天空", nextScene: 7},
+          {text: "回顾过去的日子", nextScene: 6},
+          {text: "希望永远这样", nextScene: 7}
+        ]
+      },
+      {
+        image: "pic/seedream_20251115_155440.png",
+        text: "清晨，太阳缓缓升起，照亮了整个城市。你安静地坐在墙角，嘴角带着微笑，手里握着燃尽的火柴梗，雪花覆盖在你的身上。远处教堂传来清脆的钟声，预示着圣诞日的到来。路过的人们看到你，只是摇摇头，没有人知道你在生命的最后时刻，看到了多么美好的景象。",
+        options: [
+          {text: "结束游戏", nextScene: -1},
+          {text: "查看复盘", nextScene: -2},
+          {text: "重新开始", nextScene: 0}
+        ]
+      }
+    ];
+
+    // 初始化游戏
+    function initGame() {
+      // 显示开始界面
+      document.getElementById('start-screen').style.display = 'flex';
+
+      // 绑定开始按钮事件
+      document.getElementById('start-btn').addEventListener('click', () => {
+        document.getElementById('start-screen').style.display = 'none';
+        currentScene = 0;
+        choiceHistory = [];
+        showScene();
+      });
+
+      // 绑定重新开始按钮事件
+      document.getElementById('restart-btn').addEventListener('click', () => {
+        document.getElementById('review-screen').style.display = 'none';
+        restartGame();
+      });
+    }
+
+    // 显示场景
+    function showScene() {
+      if (currentScene < 0) {
+        // 处理结局
+        if (currentScene === -1) {
+          // 结束游戏
+          document.getElementById('dialog-box').style.display = 'none';
+        } else if (currentScene === -2) {
+          // 显示复盘
+          showReview();
+        }
+        return;
+      }
+
+      // 设置背景图像
+      const sceneDisplay = document.getElementById('scene-display');
+      sceneDisplay.style.backgroundImage = `url('${scenes[currentScene].image}')`;
+
+      // 清空对话框
+      const dialogText = document.getElementById('dialog-text');
+      dialogText.innerHTML = '';
+
+      // 清空选项
+      const options = document.getElementById('options');
+      options.innerHTML = '';
+
+      // 打字机效果显示文本
+      typeWriter(scenes[currentScene].text, 0, dialogText);
+    }
+
+    // 打字机效果
+    function typeWriter(text, index, element) {
+      isTyping = true;
+      if (index < text.length) {
+        element.innerHTML += text.charAt(index);
+        index++;
+        setTimeout(() => typeWriter(text, index, element), 30);
+      } else {
+        // 文本显示完后，创建选项按钮
+        createOptions();
+        isTyping = false;
+      }
+    }
+
+    // 创建选项按钮
+    function createOptions() {
+      const options = document.getElementById('options');
+      scenes[currentScene].options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.className = 'option';
+        button.textContent = option.text;
+        button.onclick = () => {
+          choiceHistory.push({scene: currentScene, option: index});
+          currentScene = option.nextScene;
+          showScene();
+        };
+        options.appendChild(button);
+
+        // 延迟显示选项，营造动画效果
+        setTimeout(() => {
+          button.style.display = 'block';
+        }, 100 * index);
+      });
+    }
+
+    // 上一步
+    function previousScene() {
+      if (choiceHistory.length === 0) return;
+
+      const lastChoice = choiceHistory.pop();
+      currentScene = lastChoice.scene;
+      showScene();
+    }
+
+    // 重新开始游戏
+    function restartGame() {
+      currentScene = 0;
+      choiceHistory = [];
+      document.getElementById('dialog-box').style.display = 'block';
+      showScene();
+    }
+
+    // 显示复盘
+    function showReview() {
+      const reviewScreen = document.getElementById('review-screen');
+      const choiceHistoryDiv = document.getElementById('choice-history');
+
+      // 清空历史记录
+      choiceHistoryDiv.innerHTML = '';
+
+      // 显示选择历史
+      choiceHistory.forEach((choice, index) => {
+        const scene = scenes[choice.scene];
+        const option = scene.options[choice.option];
+        const p = document.createElement('p');
+        p.innerHTML = `<strong>场景 ${index + 1}：</strong> ${scene.text.slice(0, 50)}... → 选择：${option.text}`;
+        choiceHistoryDiv.appendChild(p);
+      });
+
+      // 显示最后一个场景
+      const lastScene = scenes[7];
+      const p = document.createElement('p');
+      p.innerHTML = `<strong>结局：</strong> ${lastScene.text.slice(0, 50)}...`;
+      choiceHistoryDiv.appendChild(p);
+
+      // 显示复盘界面
+      reviewScreen.style.display = 'block';
+      document.getElementById('dialog-box').style.display = 'none';
+    }
+
+    // 初始化游戏
+    document.addEventListener('DOMContentLoaded', initGame);
+  </script>
+</body>
+</html>
